@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Accueil - EventCentral{% endblock %}
+
+{% block content %}
+<h2 class="text-3xl font-bold text-orange-900 mb-8 text-center">Idées d'évènements</h2>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for event in events %}
+    <div class="bg-white rounded-xl shadow-md overflow-hidden border-t-4 border-orange-500 hover:shadow-xl transition-shadow">
+        <div class="p-6">
+            <div class="flex justify-between items-start mb-4">
+                <span class="bg-orange-100 text-orange-800 text-xs font-bold px-2.5 py-0.5 rounded uppercase">
+                    {{ event.type_event }}
+                </span>
+                <span class="text-gray-400 text-sm italic">{{ event.created_at.strftime('%d/%m/%Y') }}</span>
+            </div>
+            
+            <h3 class="text-xl font-bold text-gray-900 mb-2">{{ event.title }}</h3>
+            <p class="text-gray-600 text-sm mb-4">{{ event.description }}</p>
+            
+            <div class="space-y-2 border-t pt-4 text-sm text-gray-700">
+                <p>📅 <strong>Date :</strong> {{ event.date_event.strftime('%d/%m/%Y') }}</p>
+                <p>📍 <strong>Lieu :</strong> {{ event.location }}</p>
+            </div>
+
+            <form action="{{ url_for('delete_event', id=event.id) }}" method="POST" class="mt-6 flex justify-end" onsubmit="return confirm('Supprimer cette idée ?');">
+                <button type="submit" class="text-red-500 hover:text-red-700 text-sm font-medium">Supprimer</button>
+            </form>
+        </div>
+    </div>
+    {% else %}
+    <p class="col-span-full text-center py-12 text-gray-500 italic">Aucun évènement pour le moment.</p>
+    {% endfor %}
+</div>
+{% endblock %}
