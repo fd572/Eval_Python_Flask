@@ -25,8 +25,69 @@ class Evenement(db.Model):
 with app.app_context():
     db.create_all()
 
-@app.route("/index",methods=["GET"])
+
+
+@app.route("/",methods=["GET"])
 def index():
+    evenements = Evenement.query.all()
+    return render_template("index.html", evenements=evenements)
+
+
+@app.route("/supprimer-evenement/<int:even_id>", methods=["POST"])
+def supprimer_evenement(even_id): 
+    even = Evenement.query.get(even_id)
+    if even:
+        db.session.delete(even)
+        db.session.commit()
+    flash("Événement supprimé avec succès!", "success")
+    return redirect(url_for("index"))
+
+@app.route("/formulaire",methods=["GET","POST"])
+def formulaire():
+    if request.method == "POST" :
+        titre = request.form.get("titre")
+        type = request.form.get("type_evenement")
+        date = request.form.get("date")
+        lieu = request.form.get("lieu")
+        description = request.form.get("description")
+
+        has_errors = False
+        
+        try:
+            date = datetime.strptime(date, "%Y-%m-%d").date() 
+        except ValueError:
+            flash("Le format de la date est invalide. Le format attendu DD/MM/AAAA.", "error")
+            has_errors = True
+
+        if not titre:
+            flash("Le nom est requis.", "error")
+            has_errors = True
+        if not type:
+            flash("Le type d'événement est requis.", "error")
+            has_errors = True
+        if not date:
+            flash("La date est requise.", "error")
+            has_errors = True
+        if not lieu:
+            flash("Le lieu est requis.", "error")
+            has_errors = True
+        if not description:
+            flash("La description de l'événement est requise.", "error")
+            has_errors = True
+
+        if has_errors:
+            return redirect ("/formulaire")
+
+        nouvel_evenement = Evenement(titre=titre, type=type, date=date, lieu=lieu, description=description)
+        db.session.add(nouvel_evenement)
+        db.session.commit()
+
+        flash("Événement ajouté avec succès!", "success")
+    return render_template("formulaire.html")
+
+
+@app.route("/api",methods=["GET"])
+def api():
     Evenement_entry = Evenement.query.filter(Evenement.date >= datetime.now()).order_by(Evenement.date.asc()).limit(5).all()
     clean_db = []
     for e in Evenement_entry:
@@ -45,28 +106,6 @@ def index():
       "evenements": clean_db
     }
   ), 200
-
-@app.route("/",methods=["GET"])
-def accueil():
-    evenements = Evenement.query.all()
-    return render_template("index.html", evenements=evenements)
-
-
-@app.route("/",methods=["POST"])
-def accueil_remove():
-    
-    flash("Merci pour votre message !")
-    return redirect(url_for("accueil"))
-
-@app.route("/formulaire",methods=["GET","POST"])
-def formulaire():
-    if request.method == "POST" :
-        titre = request.form.get("titre").strip()
-        type = request.form.get("type").strip()
-        date = request.form.get("date").strip()
-        lieu = request.form.get("lieu").strip()
-        description = request.form.get("description").strip()
-    return render_template("formulaire.html")
 
 if __name__ == "__main__":
     app.run(debug=True)
