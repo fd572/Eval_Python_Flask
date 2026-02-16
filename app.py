@@ -45,11 +45,11 @@ def supprimer_evenement(even_id):
 @app.route("/formulaire",methods=["GET","POST"])
 def formulaire():
     if request.method == "POST" :
-        titre = request.form.get("titre")
+        titre = request.form.get("titre").strip()
         type = request.form.get("type_evenement")
         date = request.form.get("date")
-        lieu = request.form.get("lieu")
-        description = request.form.get("description")
+        lieu = request.form.get("lieu").strip()
+        description = request.form.get("description").strip()
 
         has_errors = False
         
@@ -60,7 +60,7 @@ def formulaire():
             has_errors = True
 
         if not titre:
-            flash("Le nom est requis.", "error")
+            flash("Le titre est requis.", "error")
             has_errors = True
         if not type:
             flash("Le type d'événement est requis.", "error")
@@ -83,12 +83,15 @@ def formulaire():
         db.session.commit()
 
         flash("Événement ajouté avec succès!", "success")
+        return redirect("/")
+    
     return render_template("formulaire.html")
 
 
-@app.route("/api",methods=["GET"])
-def api():
-    Evenement_entry = Evenement.query.filter(Evenement.date >= datetime.now()).order_by(Evenement.date.asc()).limit(5).all()
+@app.route("/evenement/<date_evenement>",methods=["GET"])
+def afficher_evenement(date_evenement):
+    date_choisie = datetime.strptime(date_evenement, "%Y-%m-%d").date()
+    Evenement_entry = Evenement.query.filter(Evenement.date >= date_choisie).order_by(Evenement.date.asc()).limit(5).all()
     clean_db = []
     for e in Evenement_entry:
         clean_db.append({
@@ -106,6 +109,8 @@ def api():
       "evenements": clean_db
     }
   ), 200
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)
